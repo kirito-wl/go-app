@@ -1,0 +1,52 @@
+pipeline {
+    agent none
+    parameters {
+        string(name: 'VERSION', defaultValue: '1.0', description: 'App version')
+    }
+    stages {
+        stage('Deploy to Dev') {
+            agent {
+                node {
+                    label 'dev'
+                    customWorkspace "/home/osboxes/go-app"
+                }
+            }
+            steps {
+                stage('Pull Artifact from Nexus') {
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                            sh "curl -o myapp -u ${NEXUS_USER}:${NEXUS_PASS} http://192.168.1.5:8081/repository/go-app/com/myapp/${params.VERSION}/myapp-${params.VERSION}.bin"
+                        }
+                    }
+                }
+                stage('Deploy') {
+                    steps {
+                        sh './myapp &'
+                    }
+                }
+            }
+        }
+        stage('Deploy to Prod') {
+            agent {
+                node {
+                    label 'production'
+                    customWorkspace "/home/osboxes/go-app"
+                }
+            }
+            steps {
+                stage('Pull Artifact from Nexus') {
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                            sh "curl -o myapp -u ${NEXUS_USER}:${NEXUS_PASS} http://192.168.1.5:8081/repository/go-app/com/myapp/${params.VERSION}/myapp-${params.VERSION}.bin"
+                        }
+                    }
+                }
+                stage('Deploy') {
+                    steps {
+                        sh './myapp &'
+                    }
+                }
+            }
+        }
+    }
+}
