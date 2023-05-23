@@ -1,52 +1,29 @@
+// Jenkinsfile for deployment pipeline
 pipeline {
     agent none
-    parameters {
-        string(name: 'VERSION', defaultValue: '1.0', description: 'App version')
-    }
     stages {
         stage('Deploy to Dev') {
-            agent {
-                node {
-                    label 'dev'
-                    customWorkspace "/home/osboxes/go-app"
-                }
+            agent { 
+                label 'dev' 
             }
             steps {
-                stage('Pull Artifact from Nexus') {
-                    steps {
-                        withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                            sh "curl -o myapp -u ${NEXUS_USER}:${NEXUS_PASS} http://192.168.1.5:8081/repository/go-app/com/myapp/${params.VERSION}/myapp-${params.VERSION}.bin"
-                        }
+                script {
+                    def buildNumberUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/build_number/${env.BUILD_NUMBER}/build_number.txt"
+                    def artifactUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/myapp/${env.BUILD_NUMBER}/myapp"
+                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh "curl -u ${NEXUS_USER}:${NEXUS_PASS} -O ${buildNumberUrl}"
+                        env.BUILD_NUMBER = readFile('build_number.txt').trim()
+                        sh "curl -u ${NEXUS_USER}:${NEXUS_PASS} -O ${artifactUrl}"
                     }
-                }
-                stage('Deploy') {
-                    steps {
-                        sh './myapp &'
-                    }
+                    sh 'chmod +x myapp'
+                    sh 'nohup ./myapp &'
                 }
             }
         }
         stage('Deploy to Prod') {
-            agent {
-                node {
-                    label 'production'
-                    customWorkspace "/home/osboxes/go-app"
-                }
+            agent { 
+                label 'production' 
             }
             steps {
-                stage('Pull Artifact from Nexus') {
-                    steps {
-                        withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                            sh "curl -o myapp -u ${NEXUS_USER}:${NEXUS_PASS} http://192.168.1.5:8081/repository/go-app/com/myapp/${params.VERSION}/myapp-${params.VERSION}.bin"
-                        }
-                    }
-                }
-                stage('Deploy') {
-                    steps {
-                        sh './myapp &'
-                    }
-                }
-            }
-        }
-    }
-}
+                script {
+                    def buildNumberUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/build_number/${env.BUILD_NUMBER}/build

@@ -15,11 +15,16 @@ pipeline {
         stage('Test') {
             steps {
                 sh '/usr/local/go/bin/go test ./...'
-                }
             }
+        }
         stage('Build') {
             steps {
                 sh '/usr/local/go/bin/go build -o /Users/will.louzado/repos/jenkins/build-repos/myapp'
+            }
+        }
+        stage('Save Version') {
+            steps {
+                sh "echo ${env.BUILD_NUMBER} > build_number.txt"
             }
         }
         stage('Upload to Nexus') {
@@ -33,7 +38,8 @@ pipeline {
                     repository: 'go-app',
                     credentialsId: 'nexus',
                     artifacts: [
-                        [artifactId: 'myapp', classifier: '', file: '/Users/will.louzado/repos/jenkins/build-repos/myapp', type: 'bin']
+                        [artifactId: 'myapp', classifier: '', file: '/Users/will.louzado/repos/jenkins/build-repos/myapp', type: 'bin'],
+                        [artifactId: 'build_number', classifier: '', file: 'build_number.txt', type: 'txt']
                     ]
                 )
             }
