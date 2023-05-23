@@ -22,9 +22,20 @@ pipeline {
                 sh '/usr/local/go/bin/go build -o /Users/will.louzado/repos/jenkins/build-repos/myapp'
             }
         }
-        stage('Archive') {
+        stage('Upload to Nexus') {
             steps {
-                archiveArtifacts artifacts: 'myapp', fingerprint: true
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: '192.168.1.5:8081',
+                    groupId: 'com.myapp',
+                    version: '1.0',
+                    repository: 'go-app',
+                    credentialsId: 'nexus',
+                    artifacts: [
+                        [artifactId: 'myapp', classifier: '', file: '/Users/will.louzado/repos/jenkins/build-repos/myapp', type: 'bin']
+                    ]
+                )
             }
         }
     }
