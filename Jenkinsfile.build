@@ -29,7 +29,7 @@ pipeline {
                     protocol: 'http',
                     nexusUrl: '192.168.1.5:8081',
                     groupId: 'com.myapp',
-                    version: '1.0',
+                    version: "${env.BUILD_NUMBER}",
                     repository: 'go-app',
                     credentialsId: 'nexus',
                     artifacts: [
