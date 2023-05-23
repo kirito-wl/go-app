@@ -9,10 +9,12 @@ pipeline {
             steps {
                 script {
                     def buildNumberUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/build_number/${env.BUILD_NUMBER}/build_number.txt"
-                    def artifactUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/myapp/${env.BUILD_NUMBER}/myapp"
                     withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh "curl -u ${NEXUS_USER}:${NEXUS_PASS} -O ${buildNumberUrl}"
                         env.BUILD_NUMBER = readFile('build_number.txt').trim()
+                    }
+                    def artifactUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/myapp/${env.BUILD_NUMBER}/myapp"
+                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh "curl -u ${NEXUS_USER}:${NEXUS_PASS} -O ${artifactUrl}"
                     }
                     sh 'chmod +x myapp'
@@ -26,4 +28,19 @@ pipeline {
             }
             steps {
                 script {
-                    def buildNumberUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/build_number/${env.BUILD_NUMBER}/build
+                    def buildNumberUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/build_number/${env.BUILD_NUMBER}/build_number.txt"
+                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh "curl -u ${NEXUS_USER}:${NEXUS_PASS} -O ${buildNumberUrl}"
+                        env.BUILD_NUMBER = readFile('build_number.txt').trim()
+                    }
+                    def artifactUrl = "http://192.168.1.5:8081/repository/go-app/com/myapp/myapp/${env.BUILD_NUMBER}/myapp"
+                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh "curl -u ${NEXUS_USER}:${NEXUS_PASS} -O ${artifactUrl}"
+                    }
+                    sh 'chmod +x myapp'
+                    sh 'nohup ./myapp &'
+                }
+            }
+        }
+    }
+}
