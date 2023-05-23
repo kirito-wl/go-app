@@ -1,0 +1,31 @@
+// Jenkinsfile for build pipeline
+pipeline {
+    agent { 
+        node { 
+            label 'build' 
+            customWorkspace '/Users/will.louzado/repos/jenkins/go-app'
+        }
+    }
+    stages {
+        stage('Pull from GitHub') {
+            steps {
+                sh 'git pull'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh '/usr/local/go/bin/go test ./...'
+                }
+            }
+        stage('Build') {
+            steps {
+                sh '/usr/local/go/bin/go build -o /Users/will.louzado/repos/jenkins/build-repos/myapp'
+            }
+        }
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: 'myapp', fingerprint: true
+            }
+        }
+    }
+}
